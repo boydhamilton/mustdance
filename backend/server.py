@@ -1,10 +1,12 @@
-from flask import Flask, redirect, request, jsonify, make_response
+from flask import Flask, redirect, request, jsonify, make_response, send_from_directory
 from flask_cors import CORS
 from dotenv import load_dotenv
 import os
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 import uuid
+import threading
+import generatevideo
 
 load_dotenv()
 
@@ -44,11 +46,33 @@ def upload():
     if file.filename == "":
         return jsonify({"error": "No selected file"}), 400
 
-    # save file in uploads directory using
-    filename = str(uuid.uuid4()) + "." + file.filename.split(".")[-1]
+    # save file in uploads directory
+    audioid = str(uuid.uuid4())
+    filename = audioid + "." + file.filename.split(".")[-1]
+    # ensure uploads directory exists
+    os.makedirs("uploads", exist_ok=True)
     upload_path = os.path.join("uploads", filename)
     file.save(upload_path)
-    return jsonify({"filename": file.filename}), 200
+
+    thread = threading.Thread(target=generatevideo.process_mp3tomp4, args=(filename,audioid))
+    thread.start()
+    return jsonify({"id": audioid}), 200
+
+@app.route("/ready/<id>",)
+def ready(id):
+    output_path = os.path.join("output", id + ".mp4")
+    if os.path.exists(output_path):
+        return jsonify({"ready": True, "url": f"/download/{id}"}), 200
+    else:
+        return jsonify({"ready": False}), 200
+    
+@app.route("/download/<id>")
+def download(id):
+    output_path = os.path.join("output", id + ".mp4")
+    if os.path.exists(output_path):
+        return send_from_directory("output", id + ".mp4")
+    else:
+        return jsonify({"error": "File not found"}), 404
 
 # Example of making Spotify request using token
 @app.route("/me")
