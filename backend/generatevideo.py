@@ -81,4 +81,4 @@ def process_mp3tomp4(filename, id):
     # Export final video
     final_clip_outline.write_videofile(f"output/{id}.mp4", codec="libx264", audio_codec="aac")
 
-    final_clip_raw.write_videofile(f"comparisons/{id}.mp4")
+    final_clip_raw.write_videofile(f"comparisons/comparison.mp4")
