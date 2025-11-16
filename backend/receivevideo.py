@@ -6,7 +6,7 @@ from videoanalyzer import score_videos
 
 app = FastAPI()
 
-UPLOAD_DIR = "uploads"
+UPLOAD_DIR = "comparisons"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 @app.post("/upload")
@@ -25,8 +25,8 @@ async def upload_file(file: UploadFile = File(...)):
     print(f"Saved webm: {webm_path}")
     print(f"Saved mp4 : {mp4_path}")
 
-    comparison_video = os.path.join("comparisons", mp4_path)
-
+    comparison_video = os.path.join("comparisons", "comparison.mp4")
+    scores = []
     if os.path.exists(comparison_video):
         print("\nRunning pose comparison...")
         scores = score_videos(mp4_path, comparison_video, step=0.2)
