@@ -5,44 +5,46 @@ from moviepy import VideoFileClip, concatenate_videoclips
 from moviepy import video
 
 # Load the audio file
-y, sr = librosa.load("resources/oneofthegirls.mp3")
 
-print("loaded")
+def process_mp3tomp4(filename):
+    y, sr = librosa.load(f"/uploads/{filename}")
 
-# Detect tempo and beat frames
-tempo, beat_frames = librosa.beat.beat_track(y=y, sr=sr)
+    print("loaded")
 
-print(f"got tempo {tempo}")
+    # Detect tempo and beat frames
+    tempo, beat_frames = librosa.beat.beat_track(y=y, sr=sr)
 
-# Convert beat frames to time
-beat_times = librosa.frames_to_time(beat_frames, sr=sr)
+    print(f"got tempo {tempo}")
 
-
-four_bar_ref = 8 # (1/120 minutes per beat (we record 120 bpm) * 60) gives seconds per beat
-
-four_bar_delta = beat_times[15] - beat_times[0]
-print(four_bar_delta)
-speedup_factor = four_bar_delta / four_bar_ref
+    # Convert beat frames to time
+    beat_times = librosa.frames_to_time(beat_frames, sr=sr)
 
 
-# List of videos and their playback speeds
-dance_moves = [
-    {"file": "resources/120met.mp4"}
-]
+    four_bar_ref = 8 # (1/120 minutes per beat (we record 120 bpm) * 60) gives seconds per beat
 
-clips = []
+    four_bar_delta = beat_times[15] - beat_times[0]
+    print(four_bar_delta)
+    speedup_factor = four_bar_delta / four_bar_ref
 
-for v in dance_moves:
-    clip = VideoFileClip(v["file"])
-    
-    # Change playback speed
-    if speedup_factor != 1.0:
-        clip = video.fx.MultiplySpeed(speedup_factor).apply(clip)
-    
-    clips.append(clip)
 
-# Concatenate all clips
-final_clip = concatenate_videoclips(clips)
+    # List of videos and their playback speeds
+    dance_moves = [
+        {"file": "resources/120met.mp4"}
+    ]
 
-# Export final video
-final_clip.write_videofile("resources/output.mp4", codec="libx264", audio_codec="aac")
+    clips = []
+
+    for v in dance_moves:
+        clip = VideoFileClip(v["file"])
+        
+        # Change playback speed
+        if speedup_factor != 1.0:
+            clip = video.fx.MultiplySpeed(speedup_factor).apply(clip)
+        
+        clips.append(clip)
+
+    # Concatenate all clips
+    final_clip = concatenate_videoclips(clips)
+
+    # Export final video
+    final_clip.write_videofile("resources/output.mp4", codec="libx264", audio_codec="aac")
