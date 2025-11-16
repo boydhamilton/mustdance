@@ -51,7 +51,7 @@ export default function DancePage() {
 
       try {
         setStatus("Uploading...");
-        const response = await fetch(`http://localhost:8000/upload`, { method: "POST", body: formData, headers: { 'Access-Control-Request-Method': 'POST' } });
+        const response = await fetch(`http://localhost:5000/upload_video`, { method: "POST", body: formData, headers: { 'Access-Control-Request-Method': 'POST' } });
         const data = await response.json();
         console.log("Backend response:", data);
         router.push("/score?id=" + id)
