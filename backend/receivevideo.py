@@ -2,6 +2,8 @@ from fastapi import FastAPI, File, UploadFile
 import uvicorn
 import os
 from moviepy import VideoFileClip
+from videoanalyzer import score_videos
+
 app = FastAPI()
 
 UPLOAD_DIR = "uploads"
@@ -22,6 +24,19 @@ async def upload_file(file: UploadFile = File(...)):
 
     print(f"Saved webm: {webm_path}")
     print(f"Saved mp4 : {mp4_path}")
+
+    # -------------------------------------------------------------
+    # Run scoring against comparison.mp4 after upload
+    # -------------------------------------------------------------
+    comparison_video = os.path.join(UPLOAD_DIR, "comparison.mp4")
+
+    if os.path.exists(comparison_video):
+        print("\nRunning pose comparison...")
+        scores = score_videos(mp4_path, comparison_video, step=1.0)
+        print("Similarity Scores:")
+        print(scores)
+    else:
+        print("comparison.mp4 not found in uploads folder. Skipping scoring.")
 
     return {"status": "success", "mp4_saved": mp4_path}
 
