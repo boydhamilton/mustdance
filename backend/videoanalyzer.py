@@ -77,13 +77,17 @@ def score_videos(videoA, videoB, step=1.0):
         frameA = get_frame_at_time(videoA, t)
         frameB = get_frame_at_time(videoB, t)
 
-        lA = get_pose_landmarks(frameA)
-        lB = get_pose_landmarks(frameB)
-
-        if lA is None or lB is None:
+        if frameA is None or frameB is None:
             scores.append(0.0)
         else:
-            scores.append(compare_poses(lA, lB))
+            lA = get_pose_landmarks(frameA)
+            lB = get_pose_landmarks(frameB)
+
+            if lA is None or lB is None:
+                scores.append(0.0)
+            else:
+                score = compare_poses(lA, lB)
+                scores.append(score)
 
         t += step
 
