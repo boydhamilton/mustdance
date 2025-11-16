@@ -11,6 +11,10 @@ import json
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
 
+currently_generating = {
+
+}
+
 # Receives audio file for processing
 @app.route("/upload", methods=["POST"])
 def upload():
@@ -29,8 +33,9 @@ def upload():
     upload_path = os.path.join("uploads", filename)
     file.save(upload_path)
 
-    thread = threading.Thread(target=generatevideo.process_mp3tomp4, args=(filename,audioid))
+    thread = threading.Thread(target=generatevideo.process_mp3tomp4, args=(filename,audioid),)
     thread.start()
+    currently_generating[audioid] = thread
     return jsonify({"id": audioid}), 200
 
 
@@ -84,7 +89,7 @@ def upload_video():
 @app.route("/ready/<id>",)
 def ready(id):
     output_path = os.path.join("output", id + ".mp4")
-    if os.path.exists(output_path):
+    if os.path.exists(output_path) and currently_generating[id].is_alive() == False:
         return jsonify({"ready": True, "url": f"/download/{id}"}), 200
     else:
         return jsonify({"ready": False}), 200
