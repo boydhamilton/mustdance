@@ -1,11 +1,14 @@
 "use client";
-import React, { useEffect, useMemo, useState } from "react";
+import { redirect, useRouter } from "next/navigation";
+import React, { useEffect, useState } from "react";
 
 export default function HomePage() {
 	const [file, setFile] = useState<File | null>(null);
 	const [id, setId] = useState<string | null>(null);
 	const [status, setStatus] = useState<string | null>(null);
 	const [uploading, setUploading] = useState(false);
+
+	const router = useRouter();
 
 	function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
 		const f = e.target.files?.[0] ?? null;
@@ -44,6 +47,10 @@ export default function HomePage() {
 				setFile(null);
 				const input = document.getElementById("audio-input") as HTMLInputElement | null;
 				if (input) input.value = "";
+				const data = (await res.json()) as { id: string };
+				console.log("Upload response data:", data);
+				const id = data.id;
+				router.push(`/setup?id=${id}`);
 			}
 		} catch (err: unknown) {
 			const message = err instanceof Error ? err.message : String(err);

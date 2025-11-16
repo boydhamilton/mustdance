@@ -1,8 +1,38 @@
 "use client"
-import React, { useEffect, useRef } from "react";
+import { useSearchParams } from "next/navigation";
+import React, { useEffect, useRef, useState } from "react";
+import { PiPerson } from "react-icons/pi";
 
 export default function Setup() {
 	const videoRef = useRef<HTMLVideoElement | null>(null);
+	const [danceReady, setDanceReady] = useState(false);
+	const [count, setCount] = useState(0);
+
+	const params = useSearchParams();
+	const id = params.get("id") || "";
+
+	useEffect(() => {
+		if (danceReady) return;
+
+		// fetch dance readiness
+		const apiBase = (process.env.NEXT_PUBLIC_API_URL as string) || "http://localhost:5000";
+
+		fetch(apiBase + '/ready/' + id)
+			.then(res => res.json())
+			.then(data => {
+				if (data.ready) {
+					setDanceReady(true);
+				}
+			})
+
+		const timer = setTimeout(() => {
+			setCount((c) => c + 1);
+		}, 5000);
+
+		return () => clearTimeout(timer);
+
+	}, [count, danceReady])
+
 
 	useEffect(() => {
 		let mounted = true;
@@ -25,27 +55,29 @@ export default function Setup() {
 		}
 
 		start();
-
-		return () => {
-			mounted = false;
-			if (localStream) {
-				localStream.getTracks().forEach((t) => t.stop());
-			}
-			if (videoEl) {
-				// clear the srcObject on the same element we used
-				try {
-					(videoEl as HTMLVideoElement).srcObject = null;
-				} catch { }
-			}
-		};
-	}, []);
+	}, [])
 
 	return (
-		<div className="min-h-screen flex items-center justify-center bg-black">
-			<div className="flex flex-col">
-				<div>Setup your </div>
-				<video ref={videoRef} className="w-full max-w-3xl rounded" playsInline muted autoPlay />
-				<div></div>
+		<div className="min-h-screen flex items-center justify-center p-6">
+			<div className="w-full max-w-2xl bg-gray-900 border border-gray-700 rounded-2xl shadow-lg p-8">
+				<h1 className="text-2xl font-semibold mb-2 text-white">Camera Setup</h1>
+				<p className="text-sm text-gray-300 mb-6">Allow camera access and position yourself in the frame.</p>
+				{/* video container */}
+				<div className="relative w-full bg-black rounded-lg overflow-hidden">
+					<video ref={videoRef} className="w-full object-cover" playsInline muted autoPlay />
+					{/* Overlay text (non-interactive) */}
+					<div className="absolute top-4 left-4 bg-black/50 text-white text-sm px-3 py-1 rounded pointer-events-none">Ensure your whole body is in frame</div>
+				</div>
+				<div className="mt-4 flex items-center gap-3">
+					<button
+						disabled={!danceReady}
+						aria-disabled={!danceReady}
+						className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-md"
+					>
+						{danceReady ? "Dance!" : "Loading..."}
+					</button>
+					<button onClick={() => window.history.back()} className="px-4 py-2 border border-gray-600 text-gray-200 rounded-md">Back</button>
+				</div>
 			</div>
 		</div>
 	);
