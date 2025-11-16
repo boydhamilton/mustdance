@@ -1,6 +1,8 @@
 import librosa
-from moviepy import VideoFileClip, concatenate_videoclips
+from moviepy import VideoFileClip, concatenate_videoclips, AudioFileClip
 from moviepy import video
+import math
+import random
 
 # Load the audio file
 
@@ -22,17 +24,23 @@ def process_mp3tomp4(filename, id):
 
     four_bar_delta = beat_times[15] - beat_times[0]
     print(four_bar_delta)
-    speedup_factor = four_bar_delta / four_bar_ref
+    speedup_factor = four_bar_ref / four_bar_delta
 
 
     # List of videos and their playback speeds
     dance_moves = [
-        {"file": "resources/test.mp4"}
+        {"file": "outlines/clap.mp4"},
+        {"file": "outlines/muscle.mp4"},
+        {"file": "outlines/roll.mp4"}
     ]
 
     clips = []
 
-    for v in dance_moves:
+    num_clips = math.floor(librosa.get_duration(y=y, sr=sr) / (four_bar_delta) )
+    print(librosa.get_duration(y=y, sr=sr))
+    print(num_clips)
+    for i in range(num_clips):
+        v = random.choice(dance_moves)
         clip = VideoFileClip(v["file"])
         
         # Change playback speed
@@ -43,6 +51,11 @@ def process_mp3tomp4(filename, id):
 
     # Concatenate all clips
     final_clip = concatenate_videoclips(clips)
+    print(filename)
+    audio = AudioFileClip(f"uploads/{filename}")
+
+    # Set the MP3 as the audio track of the final video
+    final_clip = final_clip.with_audio(audio)
 
     # Export final video
     final_clip.write_videofile(f"output/{id}.mp4", codec="libx264", audio_codec="aac")
