@@ -1,7 +1,6 @@
-const score = {
-	total_score: 2000,
-	percent_score: 75,
-}
+"use client"
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 
 function ProgressRing({ percent, size = 140, stroke = 12 }: { percent: number; size?: number; stroke?: number }) {
 	const radius = (size - stroke) / 2
@@ -37,16 +36,65 @@ function ProgressRing({ percent, size = 140, stroke = 12 }: { percent: number; s
 }
 
 export default function ScorePage() {
+
+	const [scoreReady, setScoreReady] = useState(false);
+	const [count, setCount] = useState(0);
+	const [score, setScore] = useState<{ total_score: number; percent_score: number }>({ total_score: 0, percent_score: 0 });
+
+	const params = useSearchParams();
+	const id = params.get("id") || "";
+
+	const router = useRouter();
+
+	useEffect(() => {
+		if (scoreReady) return;
+
+		// fetch dance readiness
+		const apiBase = (process.env.NEXT_PUBLIC_API_URL as string) || "http://localhost:5000";
+
+		fetch(apiBase + '/scoreready/' + id)
+			.then(res => res.json())
+			.then(data => {
+				if (data.ready) {
+					fetch(apiBase + '/score/' + id)
+						.then(res => res.json())
+						.then(data => {
+							// set score data
+							setScore({
+								total_score: data.total_score,
+								percent_score: data.percent_score
+							})
+						})
+					setScoreReady(true);
+				}
+			})
+
+		const timer = setTimeout(() => {
+			setCount((c) => c + 1);
+		}, 5000);
+
+		return () => clearTimeout(timer);
+
+	}, [count, scoreReady])
+
+	if (!scoreReady) {
+		return (
+			<div className="min-h-screen flex flex-col items-center justify-center p-6">
+				<h1 className="text-3xl sm:text-4xl font-extrabold mb-6">Calculating Your Score...</h1>
+			</div>
+		)
+	}
+
 	return (
-		<div className="min-h-screen flex flex-col items-center justify-center p-6">
-			<h1 className="text-3xl sm:text-4xl font-extrabold mb-6">Your Dance Score</h1>
+		<div className="min-h-screen flex flex-col items-center justify-center p-6 gap-6">
+			<h1 className="text-3xl sm:text-4xl font-extrabold">Your Dance Score</h1>
 
 			<div className="w-full max-w-4xl bg-gradient-to-br from-gray-900/80 via-gray-900 to-black/60 border border-gray-800 rounded-2xl p-6 grid gap-6 grid-cols-1 md:grid-cols-3 items-center shadow-2xl hover:scale-[1.01] transition-transform">
 				<div className="md:col-span-2">
 					<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 						<div>
 							<h2 className="text-sm font-semibold text-gray-300 uppercase tracking-wide">Total Score</h2>
-							<p className="text-5xl sm:text-6xl font-extrabold text-white mt-1">{score.total_score.toLocaleString()}</p>
+							<p className="text-5xl sm:text-6xl font-extrabold text-white mt-1">{score.total_score}</p>
 							<p className="mt-2 text-sm text-gray-400">Based on analyzed moves and accuracy metrics</p>
 						</div>
 					</div>
@@ -58,6 +106,11 @@ export default function ScorePage() {
 					</div>
 				</div>
 			</div>
+			<button
+				className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-md hover:cursor-pointer"
+				onClick={() => router.push("/")}>
+				Play Again
+			</button>
 		</div>
 	)
 }

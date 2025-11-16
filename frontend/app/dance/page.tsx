@@ -47,7 +47,7 @@ export default function DancePage() {
     recorder.onstop = async () => {
       const blob = new Blob(chunksRef.current, { type: "video/webm" });
       const formData = new FormData();
-      formData.append("file", blob, "recording.webm");
+      formData.append("file", blob, id + ".webm");
 
       try {
         setStatus("Uploading...");

@@ -74,6 +74,24 @@ def download(id):
     else:
         return jsonify({"error": "File not found"}), 404
 
+@app.route("/scoreready/<id>")
+def scoreready(id):
+    score_path = os.path.join("scores", id + ".json")
+    if os.path.exists(score_path):
+        return jsonify({"ready": True, "url": f"/score/{id}"}), 200
+    else:
+        return jsonify({"ready": False}), 200
+
+@app.route("/score/<id>")
+def score(id):
+    score_path = os.path.join("scores", id + ".json")
+    if os.path.exists(score_path):
+        with open(score_path, "r") as f:
+            score_data = f.read()
+        return score_data, 200
+    else:
+        return jsonify({"error": "Score not found"}), 404
+
 # Example of making Spotify request using token
 @app.route("/me")
 def me():
