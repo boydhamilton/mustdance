@@ -4,7 +4,7 @@ import numpy as np
 
 mp_selfie = mp.solutions.selfie_segmentation
 
-cap = cv2.VideoCapture("boyd3.mp4")
+cap = cv2.VideoCapture("boyd4.mp4")
 # read fps from source, fallback to 30
 fps = cap.get(cv2.CAP_PROP_FPS) or 30
 out = None
@@ -19,10 +19,25 @@ with mp_selfie.SelfieSegmentation(model_selection=1) as segmenter:
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         result = segmenter.process(rgb)
 
-        # make the mask white (255) only where model predicts person, black elsewhere
+        # Get segmentation mask (person = 1, background = 0)
         mask = (result.segmentation_mask > 0.5).astype(np.uint8) * 255
-        # ensure mask matches frame size
         mask = cv2.resize(mask, (frame.shape[1], frame.shape[0]))
+
+        # Additional white background removal: pixels with high values across all channels get zeroed
+        # This catches overexposed whites that selfie segmentation might miss
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        white_bg = (gray > 230).astype(np.uint8)
+        mask = cv2.bitwise_and(mask, mask, mask=cv2.bitwise_not(white_bg * 255))
+
+        # Clean up mask: erode small noise, dilate to fill holes
+        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
+        mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
+
+        # Smooth edges with Gaussian blur
+        mask = cv2.GaussianBlur(mask, (5, 5), 0)
+        # Re-threshold to binary after blur
+        _, mask = cv2.threshold(mask, 127, 255, cv2.THRESH_BINARY)
 
         # convert to 3-channel BGR so VideoWriter reliably accepts it
         mask_bgr = cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR)
