@@ -5,7 +5,7 @@ from moviepy import VideoFileClip, concatenate_videoclips
 from moviepy import video
 
 # Load the audio file
-y, sr = librosa.load("oneofthegirls.mp3")
+y, sr = librosa.load("resources/oneofthegirls.mp3")
 
 print("loaded")
 
@@ -27,7 +27,7 @@ speedup_factor = four_bar_delta / four_bar_ref
 
 # List of videos and their playback speeds
 dance_moves = [
-    {"file": "120met.mp4"}
+    {"file": "resources/120met.mp4"}
 ]
 
 clips = []
@@ -45,4 +45,4 @@ for v in dance_moves:
 final_clip = concatenate_videoclips(clips)
 
 # Export final video
-final_clip.write_videofile("output.mp4", codec="libx264", audio_codec="aac")
+final_clip.write_videofile("resources/output.mp4", codec="libx264", audio_codec="aac")
