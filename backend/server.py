@@ -1,40 +1,15 @@
-from flask import Flask, redirect, request, jsonify, make_response, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
-from dotenv import load_dotenv
 import os
-import spotipy
-from spotipy.oauth2 import SpotifyOAuth
 import uuid
 import threading
 import generatevideo
-
-load_dotenv()
+from moviepy import VideoFileClip
+from videoanalyzer import score_videos
+import json
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
-
-# sp_oauth = SpotifyOAuth(
-#     client_id=os.getenv("SPOTIPY_CLIENT_ID"),
-#     client_secret=os.getenv("SPOTIPY_CLIENT_SECRET"),
-#     redirect_uri=os.getenv("SPOTIPY_REDIRECT_URI"),
-#     scope="user-read-email user-library-read",
-# )
-
-# # 1. React → Flask: “Start login”
-# @app.route("/login")
-# def login():
-#     auth_url = sp_oauth.get_authorize_url()
-#     return jsonify({"url": auth_url})
-
-# # 2. Spotify → Flask: Callback
-# @app.route("/callback")
-# def callback():
-#     code = request.args.get("code")
-#     token_info = sp_oauth.get_access_token(code, as_dict=True)
-
-#     resp = make_response(redirect("http://localhost:3000/songs"))
-
-#     return redirect(f"http://localhost:3000/callback?access_token={token_info["access_token"]}&refresh_token={token_info["refresh_token"]}&expires_in={token_info["expires_in"]}")
 
 # Receives audio file for processing
 @app.route("/upload", methods=["POST"])
@@ -57,6 +32,54 @@ def upload():
     thread = threading.Thread(target=generatevideo.process_mp3tomp4, args=(filename,audioid))
     thread.start()
     return jsonify({"id": audioid}), 200
+
+
+def process_video(webm_path,):
+    mp4_path = webm_path.replace(".webm", ".mp4")
+
+    clip = VideoFileClip(webm_path)
+    clip.write_videofile(mp4_path, codec="libx264")
+
+    print(f"Saved webm: {webm_path}")
+    print(f"Saved mp4 : {mp4_path}")
+
+    comparison_video = os.path.join("comparisons", "comparison.mp4")
+    scores = []
+    if os.path.exists(comparison_video):
+        print("\nRunning pose comparison...")
+        scores = score_videos(mp4_path, comparison_video, step=2.0)
+        print("Similarity Scores:")
+        print(sum(scores) / len(scores) if scores else 0.0)
+    else:
+        print("comparison.mp4 not found in comparisons folder. Skipping scoring.")
+
+    scores_dir = "scores"
+    id= os.path.splitext(os.path.basename(mp4_path))[0]
+    os.makedirs(scores_dir, exist_ok=True)
+    json_path = os.path.join(scores_dir, id + ".json")
+    total_score = int(sum([s * 100 for s in scores])) if scores else 0.0
+    percent_score = (total_score / len(scores)) if scores else 0.0
+    data = {"total_score": total_score, "percent_score": percent_score}
+    with open(json_path, "w") as jf:
+        json.dump(data, jf, indent=4)
+
+
+@app.route("/upload_video", methods=["POST"])
+def upload_video():
+    if "file" not in request.files:
+        return jsonify({"error": "No file part"}), 400
+
+    file = request.files["file"]
+    if file.filename == "":
+        return jsonify({"error": "No selected file"}), 400
+
+    os.makedirs("comparisons", exist_ok=True)
+    webm_path = os.path.join("comparisons", file.filename)
+    file.save(webm_path)
+
+    thread = threading.Thread(target=process_video, args=(webm_path,))
+    thread.start()
+    return jsonify({"status": "processing"}), 200
 
 @app.route("/ready/<id>",)
 def ready(id):
