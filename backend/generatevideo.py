@@ -63,7 +63,7 @@ def process_mp3tomp4(filename, id):
         
 
     for i in index_list:
-        clip_raw = VideoFileClip(dance_moves_outline[idx]["file"])
+        clip_raw = VideoFileClip(dance_moves_raw[idx]["file"])
         if speedup_factor != 1.0:
             clip_raw = video.fx.MultiplySpeed(speedup_factor).apply(clip_raw)
             clips_raw.append(clip_raw)
