@@ -1,5 +1,6 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { useRef, useState } from "react";
 import Webcam from "react-webcam";
 
@@ -8,12 +9,19 @@ export default function WebcamRecorder() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
 
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
   const [recording, setRecording] = useState(false);
+
+  const params = useSearchParams();
+
+  const id = params.get("id") || "";
 
   // Start Recording
   const startRecording = () => {
     const stream = webcamRef.current?.stream;
+    videoRef.current!.play();
     if (!stream) return;
 
     chunksRef.current = []; // reset chunks from last recording
@@ -23,17 +31,24 @@ export default function WebcamRecorder() {
       if (e.data.size > 0) chunksRef.current.push(e.data);
     };
 
-    recorder.onstop = () => {
+    recorder.onstop = async () => {
       const blob = new Blob(chunksRef.current, { type: "video/webm" });
-        const url = URL.createObjectURL(blob);
-        setDownloadUrl(url);
 
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'recording.webm';
-        a.click();
-        // optionally revoke immediately after a short delay:
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      // Send to backend
+      const formData = new FormData();
+      formData.append("file", blob, "recording.webm");
+
+      try {
+        const response = await fetch("http://localhost:8000/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        const data = await response.json();
+        console.log("Backend response:", data);
+      } catch (err) {
+        console.error("Upload error:", err);
+      }
     };
 
     recorder.start();
@@ -58,6 +73,15 @@ export default function WebcamRecorder() {
         videoConstraints={{ width: 640, height: 480 }}
       />
 
+      <video
+        ref={videoRef}
+        muted
+        playsInline
+        className="bg-black max-w-3/4"
+        src={"http://localhost:5000/download/" + id}
+        onEnded={stopRecording}
+      ></video>
+
       {/* Buttons */}
       {!recording && (
         <button
@@ -65,15 +89,6 @@ export default function WebcamRecorder() {
           className="px-4 py-2 bg-green-600 text-white rounded"
         >
           Start Recording
-        </button>
-      )}
-
-      {recording && (
-        <button
-          onClick={stopRecording}
-          className="px-4 py-2 bg-red-600 text-white rounded"
-        >
-          Stop Recording
         </button>
       )}
     </div>

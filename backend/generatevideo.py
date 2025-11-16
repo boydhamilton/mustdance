@@ -6,7 +6,7 @@ from moviepy import video
 
 # Load the audio file
 
-def getbeattimestamps(filename):
+def process_mp3tomp4(filename, id):
     y, sr = librosa.load(f"uploads/{filename}")
 
     print("loaded")
@@ -33,7 +33,7 @@ def process_mp3tomp4(filename):
 
     # List of videos and their playback speeds
     dance_moves = [
-        {"file": "resources/120met.mp4"}
+        {"file": "resources/test.mp4"}
     ]
 
     clips = []
@@ -51,4 +51,4 @@ def process_mp3tomp4(filename):
     final_clip = concatenate_videoclips(clips)
 
     # Export final video
-    final_clip.write_videofile("resources/output.mp4", codec="libx264", audio_codec="aac")
+    final_clip.write_videofile(f"output/{id}.mp4", codec="libx264", audio_codec="aac")
