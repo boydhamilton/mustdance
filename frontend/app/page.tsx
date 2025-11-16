@@ -62,23 +62,23 @@ export default function HomePage() {
 
 	return (
 		<div className="min-h-screen flex items-center justify-center p-6">
-			<div className="w-full max-w-2xl bg-gray-900 border border-gray-700 rounded-2xl shadow-lg p-8">
+			<div className="w-full max-w-2xl bg-gradient-to-br from-gray-900/80 via-gray-900 to-black/60 border border-gray-800 border border-gray-700 rounded-2xl shadow-lg p-8">
 				<h1 className="text-3xl font-semibold mb-4">Upload a song</h1>
 
 				<p className="text-sm text-gray-300 mb-6">Drop or choose an audio file to upload. Supported types: mp3, wav, m4a, etc.</p>
 
 				<label
 					htmlFor="audio-input"
-					className="block w-full p-6 mb-4 rounded-lg border-2 border-dashed border-gray-700 hover:border-indigo-500 transition-colors cursor-pointer"
+					className="block w-full p-6 mb-4 rounded-lg border-2 border-dashed border-gray-700 text-gray-500 hover:text-white hover:border-indigo-500 transition-colors cursor-pointer"
 				>
 					<input id="audio-input" type="file" accept="audio/*" onChange={onFileChange} className="sr-only" />
 					<div className="flex items-center justify-between gap-4">
 						<div>
-							<div className="text-lg font-medium">{file ? file.name : "Choose an audio file"}</div>
+							<div className="text-lg font-mediu">{file ? file.name : "Choose an audio file"}</div>
 							{file && <div className="text-sm text-gray-400">{Math.round(file.size / 1024)} KB</div>}
 						</div>
 						<div>
-							<svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+							<svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v12m0 0l3-3m-3 3-3-3M21 21H3" />
 							</svg>
 						</div>
@@ -91,7 +91,7 @@ export default function HomePage() {
 						disabled={uploading || !file}
 						className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-md"
 					>
-						{uploading ? "Uploading..." : "Dance!"}
+						{uploading ? "Uploading..." : "Next"}
 					</button>
 
 					<button

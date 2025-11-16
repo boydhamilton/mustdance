@@ -1,4 +1,5 @@
 "use client"
+import Loader from "@/components/loader";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -79,15 +80,23 @@ export default function ScorePage() {
 
 	if (!scoreReady) {
 		return (
-			<div className="min-h-screen flex flex-col items-center justify-center p-6">
-				<h1 className="text-3xl sm:text-4xl font-extrabold mb-6">Calculating Your Score...</h1>
+			<div className="min-h-screen flex items-center justify-center p-6">
+				<div className="w-full max-w-md bg-gradient-to-br from-gray-900/80 via-gray-900 to-black/60 border border-gray-800 rounded-2xl p-6 shadow-2xl">
+					<div className="flex flex-col items-center gap-4">
+						<h1 className="text-2xl sm:text-3xl font-bold">Calculating Your Score</h1>
+						<p className="text-sm text-gray-400 text-center">This will take a moment while we analyze your performance.</p>
+						<div className="mt-4">
+							<Loader />
+						</div>
+					</div>
+				</div>
 			</div>
 		)
 	}
 
 	return (
 		<div className="min-h-screen flex flex-col items-center justify-center p-6 gap-6">
-			<h1 className="text-3xl sm:text-4xl font-extrabold">Your Dance Score</h1>
+			<h1 className="text-3xl sm:text-4xl font-bold">Your Dance Score</h1>
 
 			<div className="w-full max-w-4xl bg-gradient-to-br from-gray-900/80 via-gray-900 to-black/60 border border-gray-800 rounded-2xl p-6 grid gap-6 grid-cols-1 md:grid-cols-3 items-center shadow-2xl hover:scale-[1.01] transition-transform">
 				<div className="md:col-span-2">
@@ -107,7 +116,7 @@ export default function ScorePage() {
 				</div>
 			</div>
 			<button
-				className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-md hover:cursor-pointer"
+				className="px-4 py-2 font-bold bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-md hover:cursor-pointer"
 				onClick={() => router.push("/")}>
 				Play Again
 			</button>

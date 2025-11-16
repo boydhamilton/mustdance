@@ -37,15 +37,13 @@ export default function Setup() {
 
 
 	useEffect(() => {
-		let mounted = true;
-		let localStream: MediaStream | null = null;
+		const mounted = true;
 		const videoEl = videoRef.current;
 
 		async function start() {
 			try {
 				const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
 				if (!mounted) return;
-				localStream = stream;
 				if (videoEl) {
 					videoEl.srcObject = stream;
 					await videoEl.play().catch(() => { });
@@ -61,7 +59,7 @@ export default function Setup() {
 
 	return (
 		<div className="min-h-screen flex items-center justify-center p-6">
-			<div className="w-full max-w-2xl bg-gray-900 border border-gray-700 rounded-2xl shadow-lg p-8">
+			<div className="w-full max-w-2xl bg-gradient-to-br from-gray-900/80 via-gray-900 to-black/60 border border-gray-800 border border-gray-700 rounded-2xl shadow-lg p-8">
 				<h1 className="text-2xl font-semibold mb-2 text-white">Camera Setup</h1>
 				<p className="text-sm text-gray-300 mb-6">Allow camera access and position yourself in the frame.</p>
 				{/* video container */}
