@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useState } from "react";
 
 export default function HomePage() {
 	const [file, setFile] = useState<File | null>(null);
+	const [id, setId] = useState<string | null>(null);
 	const [status, setStatus] = useState<string | null>(null);
 	const [uploading, setUploading] = useState(false);
 
@@ -51,14 +52,6 @@ export default function HomePage() {
 			setUploading(false);
 		}
 	}
-
-	const previewUrl = useMemo(() => (file ? URL.createObjectURL(file) : null), [file]);
-
-	useEffect(() => {
-		return () => {
-			if (previewUrl) URL.revokeObjectURL(previewUrl);
-		};
-	}, [previewUrl]);
 
 	return (
 		<div className="min-h-screen flex items-center justify-center p-6">
