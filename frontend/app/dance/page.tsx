@@ -1,5 +1,6 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { useRef, useState } from "react";
 import Webcam from "react-webcam";
 
@@ -8,14 +9,19 @@ export default function WebcamRecorder() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
 
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
   const [recording, setRecording] = useState(false);
 
+  const params = useSearchParams();
 
+  const id = params.get("id") || "";
 
   // Start Recording
   const startRecording = () => {
     const stream = webcamRef.current?.stream;
+    videoRef.current!.play();
     if (!stream) return;
 
     chunksRef.current = []; // reset chunks from last recording
@@ -60,6 +66,15 @@ export default function WebcamRecorder() {
         videoConstraints={{ width: 640, height: 480 }}
       />
 
+      <video
+        ref={videoRef}
+        muted
+        playsInline
+        className="bg-black max-w-3/4"
+        src={"http://localhost:5000/download/" + id}
+        onEnded={stopRecording}
+      ></video>
+
       {/* Buttons */}
       {!recording && (
         <button
@@ -67,15 +82,6 @@ export default function WebcamRecorder() {
           className="px-4 py-2 bg-green-600 text-white rounded"
         >
           Start Recording
-        </button>
-      )}
-
-      {recording && (
-        <button
-          onClick={stopRecording}
-          className="px-4 py-2 bg-red-600 text-white rounded"
-        >
-          Stop Recording
         </button>
       )}
     </div>
