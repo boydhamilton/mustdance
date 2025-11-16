@@ -32,9 +32,10 @@ async def upload_file(file: UploadFile = File(...)):
 
     if os.path.exists(comparison_video):
         print("\nRunning pose comparison...")
-        scores = score_videos(mp4_path, comparison_video, step=1.0)
+        scores = score_videos(mp4_path, comparison_video, step=0.2)
+        
         print("Similarity Scores:")
-        print(scores)
+        print(sum(scores) / len(scores) if scores else 0.0)
     else:
         print("comparison.mp4 not found in uploads folder. Skipping scoring.")
 
