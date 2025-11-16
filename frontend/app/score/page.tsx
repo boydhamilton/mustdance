@@ -61,7 +61,7 @@ export default function ScorePage() {
 						.then(data => {
 							// set score data
 							setScore({
-								total_score: data.total_score,
+								total_score: Math.floor(data.total_score),
 								percent_score: data.percent_score
 							})
 						})

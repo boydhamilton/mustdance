@@ -3,19 +3,28 @@ import uvicorn
 import os
 from moviepy import VideoFileClip
 from videoanalyzer import score_videos
+from fastapi.middleware.cors import CORSMiddleware
+import threading
 
 app = FastAPI()
+
+origins = [
+        "http://localhost:3000",  # Your frontend development server
+        "https://your-production-frontend.com", # Your production frontend URL
+    ]
+
+app.add_middleware(
+        CORSMiddleware,
+        allow_origins=origins,
+        allow_credentials=True,  # Set to True if your frontend sends cookies or authorization headers
+        allow_methods=["*"],     # Or specify specific methods like ["GET", "POST"]
+        allow_headers=["*"],     # Or specify specific headers
+    )
 
 UPLOAD_DIR = "comparisons"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-@app.post("/upload")
-async def upload_file(file: UploadFile = File(...)):
-    # Save original webm
-    webm_path = os.path.join(UPLOAD_DIR, file.filename)
-    with open(webm_path, "wb") as f:
-        f.write(await file.read())
-
+def process_video(webm_path):
     # Convert to mp4
     mp4_path = webm_path.replace(".webm", ".mp4")
 
@@ -47,7 +56,19 @@ async def upload_file(file: UploadFile = File(...)):
         json.dump(data, jf, indent=4)
 
 
-    return {"status": "success", "mp4_saved": mp4_path, "score_json": json_path}
+@app.post("/upload")
+async def upload_file(file: UploadFile = File(...)):
+    # Save original webm
+    webm_path = os.path.join(UPLOAD_DIR, file.filename)
+    with open(webm_path, "wb") as f:
+        f.write(await file.read())
+
+    # Process video
+    thread = threading.Thread(target=process_video, args=(webm_path,))
+
+    return {"status": "success"}
+
+
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
