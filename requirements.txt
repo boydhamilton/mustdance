@@ -1,0 +1,8 @@
+Flask==3.1.2
+flask_cors==6.0.1
+librosa==0.11.0
+mediapipe==0.10.21
+moviepy==2.2.1
+numpy==2.3.4
+opencv_contrib_python==4.11.0.86
+opencv_python==4.11.0.86

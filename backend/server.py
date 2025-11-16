@@ -172,13 +172,6 @@ def score(id):
     else:
         return jsonify({"error": "Score not found"}), 404
 
-# Example of making Spotify request using token
-@app.route("/me")
-def me():
-    access_token = request.args.get("access_token")
-    sp = spotipy.Spotify(auth=access_token)
-    return jsonify(sp.current_user())
-
 # debug lol 
 @app.route("/")
 def home():
