@@ -1,5 +1,5 @@
 "use client"
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 import { PiPerson } from "react-icons/pi";
 
@@ -7,6 +7,8 @@ export default function Setup() {
 	const videoRef = useRef<HTMLVideoElement | null>(null);
 	const [danceReady, setDanceReady] = useState(false);
 	const [count, setCount] = useState(0);
+
+	const router = useRouter();
 
 	const params = useSearchParams();
 	const id = params.get("id") || "";
@@ -73,6 +75,7 @@ export default function Setup() {
 						disabled={!danceReady}
 						aria-disabled={!danceReady}
 						className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-md"
+						onClick={() => danceReady ? router.push(`/dance?id=${id}`) : undefined}
 					>
 						{danceReady ? "Dance!" : "Loading..."}
 					</button>
