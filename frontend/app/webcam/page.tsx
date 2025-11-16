@@ -8,7 +8,6 @@ export default function WebcamRecorder() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
 
-  const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
   const [recording, setRecording] = useState(false);
 
   // Start Recording
@@ -20,20 +19,27 @@ export default function WebcamRecorder() {
     const recorder = new MediaRecorder(stream);
 
     recorder.ondataavailable = (e) => {
-      if (e.data.size > 0) chunksRef.current.push(e.data);
+        if (e.data.size > 0) chunksRef.current.push(e.data);
     };
 
-    recorder.onstop = () => {
-      const blob = new Blob(chunksRef.current, { type: "video/webm" });
-        const url = URL.createObjectURL(blob);
-        setDownloadUrl(url);
+    recorder.onstop = async () => {
+        const blob = new Blob(chunksRef.current, { type: "video/webm" });
 
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'recording.webm';
-        a.click();
-        // optionally revoke immediately after a short delay:
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        // Send to backend
+        const formData = new FormData();
+        formData.append("file", blob, "recording.webm");
+
+        try {
+            const response = await fetch("http://localhost:8000/upload", {
+            method: "POST",
+            body: formData,
+            });
+
+            const data = await response.json();
+            console.log("Backend response:", data);
+        } catch (err) {
+            console.error("Upload error:", err);
+        }
     };
 
     recorder.start();
