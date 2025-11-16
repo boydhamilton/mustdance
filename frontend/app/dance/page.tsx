@@ -51,10 +51,10 @@ export default function DancePage() {
 
       try {
         setStatus("Uploading...");
-        const response = await fetch(`http://localhost:8000/upload`, { method: "POST", body: formData });
+        const response = await fetch(`http://localhost:8000/upload`, { method: "POST", body: formData, headers: { 'Access-Control-Request-Method': 'POST' } });
         const data = await response.json();
         console.log("Backend response:", data);
-        router.push("/score?id=" + data.id)
+        router.push("/score?id=" + id)
       } catch (err) {
         console.error("Upload error:", err);
         setStatus("Upload failed");
