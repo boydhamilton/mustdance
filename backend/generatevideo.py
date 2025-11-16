@@ -1,6 +1,6 @@
 import librosa
 from moviepy import VideoFileClip, concatenate_videoclips, AudioFileClip
-from moviepy import video
+from moviepy import video, vfx
 import math
 import random
 
@@ -57,6 +57,7 @@ def process_mp3tomp4(filename, id):
         # Change playback speed
         if speedup_factor != 1.0:
             clip_outline = video.fx.MultiplySpeed(speedup_factor).apply(clip_outline)
+            clip_outline = video.fx.MirrorX().apply(clip_outline)
 
 
         clips_outline.append(clip_outline)
@@ -68,8 +69,10 @@ def process_mp3tomp4(filename, id):
             clip_raw = video.fx.MultiplySpeed(speedup_factor).apply(clip_raw)
             clips_raw.append(clip_raw)
 
-    # Concatenate all clips_outline
+    # Concatenate all clips_outline    
     final_clip_outline = concatenate_videoclips(clips_outline)
+
+
     final_clip_raw = concatenate_videoclips(clips_raw)
 
     print(filename)
