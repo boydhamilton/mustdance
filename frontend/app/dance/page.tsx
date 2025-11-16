@@ -11,6 +11,8 @@ export default function WebcamRecorder() {
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
   const [recording, setRecording] = useState(false);
 
+
+
   // Start Recording
   const startRecording = () => {
     const stream = webcamRef.current?.stream;
@@ -25,15 +27,15 @@ export default function WebcamRecorder() {
 
     recorder.onstop = () => {
       const blob = new Blob(chunksRef.current, { type: "video/webm" });
-        const url = URL.createObjectURL(blob);
-        setDownloadUrl(url);
+      const url = URL.createObjectURL(blob);
+      setDownloadUrl(url);
 
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'recording.webm';
-        a.click();
-        // optionally revoke immediately after a short delay:
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'recording.webm';
+      a.click();
+      // optionally revoke immediately after a short delay:
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
     };
 
     recorder.start();
