@@ -40,7 +40,7 @@ async def upload_file(file: UploadFile = File(...)):
     scores_dir = "scores"
     os.makedirs(scores_dir, exist_ok=True)
     json_path = os.path.join(scores_dir, os.path.splitext(os.path.basename(mp4_path))[0] + ".json")
-    total_score = float(sum([s * 100 for s in scores])) if scores else 0.0
+    total_score = int(sum([s * 100 for s in scores])) if scores else 0.0
     percent_score = (total_score / len(scores)) if scores else 0.0
     data = {"total_score": total_score, "percent_score": percent_score}
     with open(json_path, "w") as jf:
