@@ -29,11 +29,7 @@ def callback():
     code = request.args.get("code")
     token_info = sp_oauth.get_access_token(code, as_dict=True)
 
-    return jsonify({
-        "access_token": token_info["access_token"],
-        "refresh_token": token_info["refresh_token"],
-        "expires_in": token_info["expires_in"]
-    })
+    return redirect(f"http://localhost:3000/callback?access_token={token_info["access_token"]}&refresh_token={token_info["refresh_token"]}&expires_in={token_info["expires_in"]}")
 
 # Example of making Spotify request using token
 @app.route("/me")
