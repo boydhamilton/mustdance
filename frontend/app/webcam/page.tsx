@@ -1,118 +1,120 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import Webcam from "react-webcam";
 
-export default function WebcamPose() {
+export default function WebcamRecorder() {
   const webcamRef = useRef<Webcam>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [loaded, setLoaded] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
 
-  useEffect(() => {
-    const script = document.createElement("script");
-    script.src =
-      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/dist/tasks-vision.js";
-    script.async = true;
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordedChunks, setRecordedChunks] = useState<Blob[]>([]);
+  const [videoURL, setVideoURL] = useState<string | null>(null);
 
-    script.onload = () => {
-      setLoaded(true);
-    };
+  const startRecording = () => {
+    setRecordedChunks([]);
+    setVideoURL(null);
 
-    document.body.appendChild(script);
-  }, []);
+    const stream = webcamRef.current?.video?.srcObject as MediaStream;
+    if (!stream) {
+      console.error("No webcam stream available");
+      return;
+    }
 
-  useEffect(() => {
-    if (!loaded) return;
+    const recorder = new MediaRecorder(stream, {
+      mimeType: "video/webm; codecs=vp9",
+    });
 
-    const vision = (window as any).vision;
-
-    if (!vision) return;
-
-    let poseLandmarker: any = null;
-
-    const initModel = async () => {
-      const fileset = await vision.FilesetResolver.forVisionTasks(
-        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
-      );
-
-      poseLandmarker = await vision.PoseLandmarker.createFromOptions(fileset, {
-        baseOptions: {
-          modelAssetPath:
-            "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/pose_landmarker_lite.task",
-        },
-        runningMode: "VIDEO",
-        numPoses: 1,
-      });
-
-      startProcessing();
-    };
-
-    const startProcessing = () => {
-      const renderLoop = () => {
-        const video = webcamRef.current?.video;
-        if (!video || !poseLandmarker) {
-          requestAnimationFrame(renderLoop);
-          return;
-        }
-
-        if (video.readyState === 4) {
-          poseLandmarker.detectForVideo(
-            video,
-            performance.now(),
-            (result: any) => {
-              draw(result);
-            }
-          );
-        }
-
-        requestAnimationFrame(renderLoop);
-      };
-
-      requestAnimationFrame(renderLoop);
-    };
-
-    const draw = (result: any) => {
-      const canvas = canvasRef.current;
-      const ctx = canvas?.getContext("2d");
-      const video = webcamRef.current?.video;
-
-      if (!canvas || !ctx || !video) return;
-
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-      const landmarks = result.landmarks?.[0];
-      if (!landmarks) return;
-
-      ctx.fillStyle = "lime";
-
-      for (let lm of landmarks) {
-        ctx.beginPath();
-        ctx.arc(lm.x * canvas.width, lm.y * canvas.height, 5, 0, Math.PI * 2);
-        ctx.fill();
+    recorder.ondataavailable = (event) => {
+      if (event.data.size > 0) {
+        setRecordedChunks((prev) => [...prev, event.data]);
       }
     };
 
-    initModel();
-  }, [loaded]);
+    recorder.start();
+    mediaRecorderRef.current = recorder;
+    setIsRecording(true);
+  };
+
+  const stopRecording = () => {
+    if (!mediaRecorderRef.current) return;
+
+    mediaRecorderRef.current.stop();
+    setIsRecording(false);
+
+    setTimeout(() => {
+      const blob = new Blob(recordedChunks, { type: "video/webm" });
+      const url = URL.createObjectURL(blob);
+      setVideoURL(url);
+    }, 300);
+  };
+
+  const downloadRecording = () => {
+    if (recordedChunks.length === 0) return;
+
+    const blob = new Blob(recordedChunks, { type: "video/webm" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.style.display = "none";
+    a.href = url;
+    a.download = "webcam_recording.webm";
+    document.body.appendChild(a);
+    a.click();
+
+    URL.revokeObjectURL(url);
+  };
 
   return (
-    <div className="flex flex-col items-center">
-      {!loaded && <p>Loading pose model...</p>}
+    <div className="flex flex-col items-center space-y-4 p-6">
+      <h1 className="text-xl font-semibold">Webcam Recorder</h1>
 
+      {/* Webcam Feed */}
       <Webcam
         ref={webcamRef}
-        mirrored
+        audio={false}
         style={{ width: 640, height: 480 }}
-        videoConstraints={{ width: 640, height: 480 }}
       />
 
-      <canvas
-        ref={canvasRef}
-        width={640}
-        height={480}
-        className="rounded-lg shadow border mt-4"
-      />
+      {/* Start/Stop Buttons */}
+      {!isRecording ? (
+        <button
+          onClick={startRecording}
+          className="px-6 py-2 bg-green-600 text-white rounded"
+        >
+          Start Recording
+        </button>
+      ) : (
+        <button
+          onClick={stopRecording}
+          className="px-6 py-2 bg-red-600 text-white rounded"
+        >
+          Stop Recording
+        </button>
+      )}
+
+      {/* Video Preview */}
+      {videoURL && (
+        <div className="flex flex-col items-center">
+          <h2 className="font-medium">Preview Recording</h2>
+          <video
+            controls
+            src={videoURL}
+            className="border rounded mt-2"
+            style={{ width: 640 }}
+          />
+        </div>
+      )}
+
+      {/* Download Button */}
+      {videoURL && (
+        <button
+          onClick={downloadRecording}
+          className="px-6 py-2 bg-blue-600 text-white rounded"
+        >
+          Download Recording
+        </button>
+      )}
     </div>
   );
 }
