@@ -17,8 +17,12 @@ def process_mp3tomp4(filename, id):
     print(f"got tempo {tempo}")
 
     # Convert beat frames to time
-    beat_times = librosa.frames_to_time(beat_frames, sr=sr)
+    return librosa.frames_to_time(beat_frames, sr=sr)
 
+
+def process_mp3tomp4(filename):
+    
+    beat_times = getbeattimestamps(filename)
 
     four_bar_ref = 8 # (1/120 minutes per beat (we record 120 bpm) * 60) gives seconds per beat
 
