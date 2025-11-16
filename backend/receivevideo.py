@@ -25,10 +25,7 @@ async def upload_file(file: UploadFile = File(...)):
     print(f"Saved webm: {webm_path}")
     print(f"Saved mp4 : {mp4_path}")
 
-    # -------------------------------------------------------------
-    # Run scoring against comparison.mp4 after upload
-    # -------------------------------------------------------------
-    comparison_video = os.path.join(UPLOAD_DIR, "comparison.mp4")
+    comparison_video = os.path.join("comparisons", mp4_path)
 
     if os.path.exists(comparison_video):
         print("\nRunning pose comparison...")
