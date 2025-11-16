@@ -7,6 +7,8 @@ import generatevideo
 from moviepy import VideoFileClip
 from videoanalyzer import score_videos
 import json
+import shutil
+import subprocess
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
@@ -42,8 +44,58 @@ def upload():
 def process_video(webm_path,):
     mp4_path = webm_path.replace(".webm", ".mp4")
 
-    clip = VideoFileClip(webm_path)
-    clip.write_videofile(mp4_path, codec="libx264")
+    ffmpeg_bin = shutil.which("ffmpeg")
+    used_ffmpeg = False
+    if ffmpeg_bin:
+        # Configure fast options. Tune with env vars:
+        #   FFMPEG_HW_ACCEL = "nvenc" to try NVIDIA hw encoder (h264_nvenc)
+        #   DOWNSCALE = "640" to scale width to 640 (keep aspect)
+        #   FPS = "24" to force framerate
+        hw = os.getenv("FFMPEG_HW_ACCEL", "").lower()
+        downscale = os.getenv("DOWNSCALE", "")
+        fps = os.getenv("FPS", "")
+
+        if hw == "nvenc":
+            vcodec = "h264_nvenc"
+            vparams = ["-preset", "fast"]  # nvenc presets differ; tune as needed
+        else:
+            vcodec = "libx264"
+            vparams = ["-preset", "ultrafast", "-crf", "23", "-threads", "0"]
+
+        cmd = [ffmpeg_bin, "-y", "-i", webm_path]
+
+        # optional downscale
+        if downscale:
+            cmd += ["-vf", f"scale={downscale}:-2"]
+
+        # optional fps
+        if fps:
+            cmd += ["-r", fps]
+
+        # video codec + params
+        cmd += ["-c:v", vcodec] + vparams
+
+        # audio: try to copy if present to avoid re-encode; otherwise encode to aac
+        # using "-c:a copy" may fail if audio codec incompatible with mp4; fallback below handles errors
+        cmd += ["-c:a", "aac", "-b:a", "128k"]
+
+        cmd += [mp4_path]
+
+        try:
+            print("Running ffmpeg:", " ".join(cmd))
+            subprocess.run(cmd, check=True)
+            used_ffmpeg = True
+        except Exception as e:
+            print("ffmpeg conversion failed, falling back to moviepy:", e)
+
+    # Fallback to moviepy if ffmpeg not available or failed
+    if not used_ffmpeg:
+        try:
+            clip = VideoFileClip(webm_path)
+            clip.write_videofile(mp4_path, codec="libx264")
+        except Exception as e:
+            print("moviepy conversion failed:", e)
+            return
 
     print(f"Saved webm: {webm_path}")
     print(f"Saved mp4 : {mp4_path}")
