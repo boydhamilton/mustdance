@@ -1,2 +1,7 @@
 .env
 backend/.env
+
+.cache
+
+backend/resources/*
+backend/uploads/*
